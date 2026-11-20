@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "aegis_afk",
+  "version": "${version}",
+  "name": "AEGIS AFK Watch",
+  "description": "Quality-of-life AFK indicator for BendersMC staff. Reads your own input only; sends nothing.",
+  "authors": ["BendersMC Moderation QOL"],
+  "license": "All-Rights-Reserved",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["io.aegis.afkwatch.AfkWatchClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "minecraft": ">=26.3-",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}
