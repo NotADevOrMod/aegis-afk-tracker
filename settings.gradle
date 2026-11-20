@@ -5,4 +5,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "aegis-afk-watch"
+rootProject.name = "aegis-afk-bridge"

@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "id": "aegis_afk",
+  "id": "aegis_afk_bridge",
   "version": "${version}",
-  "name": "AEGIS AFK Watch",
-  "description": "Quality-of-life AFK indicator for BendersMC staff. Reads your own input only; sends nothing.",
+  "name": "AEGIS AFK Bridge",
+  "description": "Publishes your server, gamemode and in-game idle time to a local file for the AEGIS AFK Watch app. Reads only; sends nothing over the network.",
   "authors": ["BendersMC Moderation QOL"],
   "license": "All-Rights-Reserved",
   "environment": "client",
   "entrypoints": {
-    "client": ["io.aegis.afkwatch.AfkWatchClient"]
+    "client": ["io.aegis.afkbridge.AfkBridgeClient"]
   },
   "depends": {
     "fabricloader": ">=0.19.0",
