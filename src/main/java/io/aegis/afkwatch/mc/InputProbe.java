@@ -61,7 +61,7 @@ final class InputProbe {
         }
 
         // An open menu or chat counts for a limited time; typing itself is not observable here.
-        Object screen = mc.screen;
+        Object screen = mc.gui.screen(); // 26.x moved the current screen from Minecraft to Gui
         if (screen != lastScreen) {
             lastScreen = screen;
             screenSince = now;

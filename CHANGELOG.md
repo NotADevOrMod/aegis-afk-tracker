@@ -5,3 +5,4 @@
 - Red escalating warnings outside the AFK server (default from 2:00), calm blue inside it.
 - In-game HUD pill and an optional desktop status window.
 - Flags a connection drop that happened while idle. Does not reconnect.
+- Fix: read the current screen via `gui.screen()` (26.x API).
