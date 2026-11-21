@@ -3,7 +3,9 @@ package io.aegis.afkwatch;
 import io.aegis.afkwatch.core.Session;
 import io.aegis.afkwatch.core.Settings;
 import io.aegis.afkwatch.mc.GameBridge;
-import io.aegis.afkwatch.window.AfkWindow;
+import io.aegis.afkwatch.stats.Stats;
+import io.aegis.afkwatch.stats.StatsStore;
+import io.aegis.afkwatch.stats.Tracker;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
@@ -15,14 +17,21 @@ public final class AfkWatchClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        Settings settings = Settings.load(FabricLoader.getInstance().getConfigDir().resolve("aegis_afk.json"));
+        var configDir = FabricLoader.getInstance().getConfigDir();
+
+        Settings settings = Settings.load(configDir.resolve("aegis_afk.json"));
         if (settings.loadProblem() != null) {
             LOG.warn(settings.loadProblem());
         }
 
         Session session = new Session(settings);
-        GameBridge.install(session, settings);
-        AfkWindow.install(session, settings, LOG::warn);
+        Stats lifetime = new Stats();
+        Stats thisSession = new Stats();
+        StatsStore store = new StatsStore(configDir.resolve("aegis_afk_stats.json"));
+        store.load(lifetime);
+        Tracker tracker = new Tracker(settings, session, lifetime, thisSession);
+
+        GameBridge.install(new Context(settings, session, tracker, lifetime, thisSession, store));
 
         LOG.info("Loaded. Tracking servers matching {}; AFK server names {}.",
                 settings.serverHostFragments, settings.afkServerNames);

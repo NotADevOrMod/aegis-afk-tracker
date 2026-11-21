@@ -29,17 +29,16 @@ public final class Settings {
     /** How long the "Disconnected" state stays up after a drop. */
     public int disconnectLingerSeconds = 600;
 
+    /** Print one chat line on joining a server saying whether it is being tracked. */
+    public boolean joinNotice = true;
+
     public boolean hudEnabled = true;
     public boolean hudShowWhenActive = false;
+    /** Pill centre as a fraction of the screen width, so it survives a GUI-scale change. */
+    public float hudX = 0.5f;
+    /** Pill top edge as a fraction of the screen height. */
+    public float hudY = 0.03f;
 
-    public boolean windowEnabled = true;
-    public boolean windowShowWhenActive = true;
-    public boolean windowAlwaysOnTop = true;
-    public float windowOpacity = 0.92f;
-    public int windowX = -1;
-    public int windowY = -1;
-
-    public boolean beepOnWarning = false;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
@@ -84,6 +83,10 @@ public final class Settings {
         return loadProblem;
     }
 
+    public int warnStartSeconds() {
+        return warningStepsSeconds.get(0);
+    }
+
     public boolean matchesHost(String host) {
         String h = host.toLowerCase(Locale.ROOT);
         return serverHostFragments.stream().anyMatch(f -> !f.isBlank() && h.contains(f.toLowerCase(Locale.ROOT)));
@@ -104,6 +107,7 @@ public final class Settings {
         screenGraceSeconds = Math.max(0, screenGraceSeconds);
         unfocusedGraceSeconds = Math.max(0, unfocusedGraceSeconds);
         disconnectLingerSeconds = Math.max(30, disconnectLingerSeconds);
-        windowOpacity = Math.max(0.3f, Math.min(1f, windowOpacity));
+        hudX = Math.max(0f, Math.min(1f, hudX));
+        hudY = Math.max(0f, Math.min(1f, hudY));
     }
 }

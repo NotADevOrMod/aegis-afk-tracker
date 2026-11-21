@@ -12,8 +12,9 @@ public final class Session {
     private final Settings settings;
 
     private boolean connected;
+    private String host = "";
     private boolean onTarget;
-    private boolean inAfkServer;
+    private boolean afkServer;
     private String server = "";
     private long lastActivity;
     private long joinCount;
@@ -34,9 +35,10 @@ public final class Session {
             return;
         }
         connected = true;
+        this.host = host == null ? "" : host;
         onTarget = target;
         dropped = false;
-        inAfkServer = false;
+        afkServer = false;
         server = "";
         lastActivity = now;
         joinCount++;
@@ -62,7 +64,7 @@ public final class Session {
         }
         ServerNames.parseSwitch(line).ifPresent(name -> {
             server = name;
-            inAfkServer = settings.isAfkServer(name);
+            afkServer = settings.isAfkServer(name);
             lastActivity = now; // switching gamemode is something you just did
         });
     }
@@ -71,6 +73,31 @@ public final class Session {
         if (connected && onTarget) {
             lastActivity = Math.max(lastActivity, now);
         }
+    }
+
+    /** True while connected to a server that matches {@code serverHostFragments}. */
+    public synchronized boolean isTracking() {
+        return connected && onTarget;
+    }
+
+    /** The address the game reported for the current connection (empty in singleplayer). */
+    public synchronized String host() {
+        return host;
+    }
+
+    /** Seconds since the last detected activity. */
+    public synchronized long idleSeconds(long now) {
+        return Math.max(0, (now - lastActivity) / 1000);
+    }
+
+    /** True while connected to a tracked server and sitting in its AFK gamemode. */
+    public synchronized boolean inAfkServer() {
+        return connected && onTarget && afkServer;
+    }
+
+    /** The gamemode the network last sent us to, or an empty string if unknown. */
+    public synchronized String serverName() {
+        return server;
     }
 
     /** Increments on every genuinely new connection; lets the window reset "hide for this session". */
@@ -87,7 +114,7 @@ public final class Session {
             return fresh ? new View(Mode.DISCONNECTED, 0, idleAtDrop, server) : View.INACTIVE;
         }
         long idle = Math.max(0, (now - lastActivity) / 1000);
-        if (inAfkServer) {
+        if (afkServer) {
             return idle >= settings.afkServerAfterSeconds
                     ? new View(Mode.AFK_SERVER, 0, idle, server)
                     : new View(Mode.ACTIVE, 0, idle, server);
