@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.5]
+- Renamed `mc/GameBridge` to `mc/ClientSetup`. Everything lives in the mod; nothing bridges to anything else. No behaviour change.
+- Upgrade note: delete the old `src/main/java/io/aegis/afkwatch/mc/GameBridge.java` from your repo.
+
 ## [0.2.4]
 - Build fixes for 26.3: key type is `InputConstants.Type.KEYBOARD`; numpad 9 is given as its key code so no GLFW import is needed.
 - Upgrade note: delete the old `window/` source folder (see README).

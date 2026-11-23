@@ -2,7 +2,7 @@ package io.aegis.afkwatch;
 
 import io.aegis.afkwatch.core.Session;
 import io.aegis.afkwatch.core.Settings;
-import io.aegis.afkwatch.mc.GameBridge;
+import io.aegis.afkwatch.mc.ClientSetup;
 import io.aegis.afkwatch.stats.Stats;
 import io.aegis.afkwatch.stats.StatsStore;
 import io.aegis.afkwatch.stats.Tracker;
@@ -50,7 +50,7 @@ public final class AfkWatchClient implements ClientModInitializer {
             store.load(lifetime);
             Tracker tracker = new Tracker(settings, session, lifetime, thisSession);
 
-            GameBridge.install(new Context(settings, session, tracker, lifetime, thisSession, store, diag));
+            ClientSetup.install(new Context(settings, session, tracker, lifetime, thisSession, store, diag));
             diag.log("Startup finished.");
         } catch (Throwable t) {
             diag.error("onInitializeClient", t);

@@ -1,6 +1,6 @@
 # AEGIS AFK Watch (mod)
 
-> **Upgrading an existing repo:** this version removes the desktop window. Delete the folder `src/main/java/io/aegis/afkwatch/window/` from your repo (it still references settings that no longer exist and breaks the build), or simply start from an empty repo and copy this project in.
+> **Upgrading an existing repo:** delete these old files, which this version no longer has: `src/main/java/io/aegis/afkwatch/window/AfkWindow.java` (the old desktop window; it breaks the build) and `src/main/java/io/aegis/afkwatch/mc/GameBridge.java` (renamed to `ClientSetup.java`). Or start from an empty repo and copy this project in.
 
 A client-side Fabric mod for BendersMC staff. It watches your own input and tells you when you have gone idle, and it can show how much of your time is real play versus sitting idle.
 
@@ -64,7 +64,7 @@ Push to GitHub. The workflow builds with JDK 25 and uploads the jar as an artifa
 
 Run on every Minecraft or Fabric bump and record the result in the changelog:
 
-1. It compiles. Game-facing code is limited to `mc/InputProbe` (state reads), `mc/ConnectionHooks` (events), `mc/GameBridge` (keybind, tick), `ui/Pill` (every pill draw call), and the two screens.
+1. It compiles. Game-facing code is limited to `mc/InputProbe` (state reads), `mc/ConnectionHooks` (events), `mc/ClientSetup` (keybind, tick), `ui/Pill` (every pill draw call), and the two screens.
 2. Join BendersMC: pill hidden while active, orange at 2:00, red by 3:00, blue in the AFK server.
 3. Hop gamemodes: the pill keeps the right state, and the analysis table gains a row per gamemode.
 4. **Numpad 9** opens the analysis; Escape closes it. Move pill: drag, Done, restart the game, position is kept.
@@ -77,6 +77,6 @@ Run on every Minecraft or Fabric bump and record the result in the changelog:
 ```
 core/    Pure Java: Session (state machine), Settings, Palette, ServerNames, View, Format. No Minecraft imports.
 stats/   Pure Java: Stats, Tracker, StatsStore (Gson). No Minecraft imports.
-mc/      Fabric/Minecraft adapters: GameBridge, ConnectionHooks, InputProbe, HudOverlay.
+mc/      Fabric/Minecraft adapters: ClientSetup, ConnectionHooks, InputProbe, HudOverlay.
 ui/      Pill, PositionScreen, AnalysisScreen.
 ```
