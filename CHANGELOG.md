@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.4]
+- Build fixes for 26.3: key type is `InputConstants.Type.KEYBOARD`; numpad 9 is given as its key code so no GLFW import is needed.
+- Upgrade note: delete the old `window/` source folder (see README).
+
 ## [0.2.3]
 - Diagnostics: `aegis_afk_diagnostics.txt` records startup steps, joins, mode changes and errors. Every registration step is guarded so one failure cannot hide the rest, and tick and HUD errors are logged instead of ignored.
 

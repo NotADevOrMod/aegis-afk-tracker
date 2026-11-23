@@ -1,5 +1,7 @@
 # AEGIS AFK Watch (mod)
 
+> **Upgrading an existing repo:** this version removes the desktop window. Delete the folder `src/main/java/io/aegis/afkwatch/window/` from your repo (it still references settings that no longer exist and breaks the build), or simply start from an empty repo and copy this project in.
+
 A client-side Fabric mod for BendersMC staff. It watches your own input and tells you when you have gone idle, and it can show how much of your time is real play versus sitting idle.
 
 - **Status pill:** a small pill on the HUD. Outside the AFK server it turns orange at 2:00 idle, red at 3:00, deep red at 5:00, with escalating wording. In the AFK server it shows a calm blue AFK timer. Hidden while you are active.

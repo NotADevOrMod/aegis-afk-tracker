@@ -12,7 +12,6 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 
 import java.time.LocalDate;
 
@@ -20,6 +19,8 @@ import java.time.LocalDate;
 public final class GameBridge {
     private static final long AUTOSAVE_MS = 30_000;
     private static final int MAX_TICK_ERRORS = 5;
+    /** GLFW key code for numpad 9. Written as a number so this file needs no GLFW import. */
+    private static final int KEY_NUMPAD_9 = 329;
 
     private GameBridge() {}
 
@@ -46,8 +47,8 @@ public final class GameBridge {
                     Identifier.fromNamespaceAndPath(AfkWatchClient.MOD_ID, "main"));
             openAnalysis = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                     "key.aegis_afk.open_analysis",
-                    InputConstants.Type.KEYSYM,
-                    GLFW.GLFW_KEY_KP_9, // numpad 9: unlikely to clash with other mods
+                    InputConstants.Type.KEYBOARD,
+                    KEY_NUMPAD_9, // unlikely to clash with other mods
                     category));
             diag.log("Key mapping registered: key.aegis_afk.open_analysis (default Numpad 9).");
         } catch (Throwable t) {
