@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.2.3]
+- Diagnostics: `aegis_afk_diagnostics.txt` records startup steps, joins, mode changes and errors. Every registration step is guarded so one failure cannot hide the rest, and tick and HUD errors are logged instead of ignored.
+
 ## [0.2.2]
 - Default analysis key is now Numpad 9. Still rebindable in Controls.
 

@@ -23,6 +23,7 @@ Read-only polling of state the game already tracks: movement keys, jump, sneak, 
 |---|---|
 | `aegis_afk.json` | Settings (below), including the pill position. |
 | `aegis_afk_stats.json` | Per day and per gamemode: milliseconds active and idle. Nothing else. |
+| `aegis_afk_diagnostics.txt` | A short trail of startup steps and events (see below). Rewritten on each launch, capped at 300 lines. Contains the server address and the list of installed mod ids, so check it before sharing it publicly. |
 
 No network access, no tokens, no usernames, no account data. Use **Reset stats** (it asks you to click twice) to wipe the numbers.
 
@@ -41,6 +42,8 @@ No network access, no tokens, no usernames, no account data. Use **Reset stats**
 | `hudX` / `hudY` | `0.5` / `0.03` | Pill position (set by dragging; centre-x and top-y as screen fractions). |
 
 ## If nothing shows
+
+0. Open `aegis_afk_diagnostics.txt` in the Fabric `config` folder. It records every startup step (entrypoint reached, settings loaded, HUD element registered, key registered, first tick), every join with the address the game reported, every change of indicator state, and any error with its first few stack lines. No file means the mod's entrypoint never ran. Make sure only one AFK Watch jar is in the mods folder.
 
 1. On joining a server you should see a chat line starting `[AFK Watch <version>]`. If it says **NOT tracking**, copy the address it shows into `serverHostFragments` in `aegis_afk.json` and restart. If you see no line at all, the mod is not the version you think it is, or `joinNotice` is off.
 2. The pill is hidden while you are active. To check it works, set `hudShowWhenActive` to `true`, or set `warningStepsSeconds` to `[10, 20, 30]` and stand still for 10 seconds.

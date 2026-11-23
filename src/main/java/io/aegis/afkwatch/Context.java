@@ -13,5 +13,6 @@ public record Context(
         Tracker tracker,
         Stats lifetime,
         Stats thisSession,
-        StatsStore store) {
+        StatsStore store,
+        Diagnostics diag) {
 }

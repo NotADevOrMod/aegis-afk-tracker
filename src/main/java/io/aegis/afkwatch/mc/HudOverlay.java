@@ -10,6 +10,8 @@ import net.minecraft.resources.Identifier;
 
 /** Registers the status pill on the in-game HUD. Drawing itself lives in {@link Pill}. */
 final class HudOverlay {
+    private static int drawErrors;
+
     private HudOverlay() {}
 
     static void register(Context ctx) {
@@ -20,17 +22,23 @@ final class HudOverlay {
                 VanillaHudElements.CHAT,
                 Identifier.fromNamespaceAndPath("aegis_afk", "status"),
                 (graphics, deltaTracker) -> {
-                    long now = System.currentTimeMillis();
-                    View view = ctx.session().view(now);
-                    if (!view.visibleOnHud(ctx.settings().hudShowWhenActive)) {
-                        return;
+                    try {
+                        long now = System.currentTimeMillis();
+                        View view = ctx.session().view(now);
+                        if (!view.visibleOnHud(ctx.settings().hudShowWhenActive)) {
+                            return;
+                        }
+                        Minecraft mc = Minecraft.getInstance();
+                        int screenW = mc.getWindow().getGuiScaledWidth();
+                        int screenH = mc.getWindow().getGuiScaledHeight();
+                        int w = Pill.width(mc.font, view);
+                        Pill.draw(graphics, mc.font, view,
+                                Pill.x(ctx.settings(), screenW, w), Pill.y(ctx.settings(), screenH), now);
+                    } catch (Throwable t) {
+                        if (drawErrors++ < 3) {
+                            ctx.diag().error("HUD draw", t);
+                        }
                     }
-                    Minecraft mc = Minecraft.getInstance();
-                    int screenW = mc.getWindow().getGuiScaledWidth();
-                    int screenH = mc.getWindow().getGuiScaledHeight();
-                    int w = Pill.width(mc.font, view);
-                    Pill.draw(graphics, mc.font, view,
-                            Pill.x(ctx.settings(), screenW, w), Pill.y(ctx.settings(), screenH), now);
                 });
     }
 }
