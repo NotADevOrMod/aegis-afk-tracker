@@ -6,7 +6,8 @@ A client-side Fabric mod for BendersMC staff. It watches your own input and tell
 
 - **Status pill:** a small pill on the HUD. Outside the AFK server it turns orange at 2:00 idle, red at 3:00, deep red at 5:00, with escalating wording. In the AFK server it shows a calm blue AFK timer. Hidden while you are active.
 - **Movable:** open the analysis screen, press **Move pill**, click the pill to pick it up, move the mouse, and click again to drop it. The arrow buttons nudge it in small steps. The position is saved as a fraction of the screen, so it survives a GUI-scale change.
-- **Idle alert:** in **Settings**, turn on an alert that fires when you have been idle for a set time in a tracked, non-AFK gamemode. Choose the delay, whether it repeats, a sound (XP orb, pling, bell or none) and an optional chat line. Off by default. A **Test alert** button previews it.
+- **Idle alert:** in **Settings**, turn on an alert that fires when you have been idle for a set time in a tracked, non-AFK gamemode. Choose the delay, whether it repeats, a sound (XP orb, pling, bell, your own file, or none) and an optional chat line. Off by default. A **Test alert** button previews it.
+- **Auto-join AFK:** after you have been idle for 5 minutes (adjustable, 1 to 60 minutes, in **Settings**) in a tracked, non-AFK gamemode, the mod sends `/joinq AFK` once and prints a chat line saying so. It does not repeat while you stay idle (repeating could drop your place in the queue), and re-arms when you move or once you are in the AFK gamemode. On by default; the Settings button toggles it.
 - **Servers:** in **Settings > Servers**, add gamemode names as **Include** (track only these), **Exclude** (ignore completely: no pill, no alert, no statistics) or **AFK** (the AFK gamemode). The gamemode you are in right now is pre-filled. Click a role to cycle it, **x** to remove.
 - **Analysis screen:** press **Numpad 9** (rebindable under *AEGIS AFK Watch* in Controls). Tabs for this session, today, this week and all time. Shows active time, idle time, idle share, a bar, and a per-gamemode table. Buttons: **Settings**, **Move pill**, **Done**.
 - **Disconnect while idle** is not handled specially in this version.
@@ -39,11 +40,16 @@ No network access, no tokens, no usernames, no account data. Use **Reset stats**
 | `afkServerNames` | `["afk"]` | Gamemode names that count as the AFK server (case-insensitive). Also editable in Settings > Servers. |
 | `includedServers` | `[]` | If not empty, only these gamemodes are tracked (the AFK gamemode is unaffected). |
 | `excludedServers` | `[]` | Gamemodes to ignore completely. Exclude wins over include. |
+| `autoAfkEnabled` | `true` | Send the AFK command by itself when idle long enough. |
+| `autoAfkAfterSeconds` | `300` | Idle seconds before it does (60 to 3600). |
+| `autoAfkCommand` | `"joinq AFK"` | The command, without the slash. |
 | `alertEnabled` | `false` | The idle alert. |
 | `alertAfterSeconds` | `60` | Idle seconds before the alert (10 to 900). |
 | `alertRepeatSeconds` | `60` | Seconds between repeats while idle; `0` alerts once. |
 | `alertSound` | `"xp"` | `xp`, `pling`, `bell` or `none`. |
 | `alertChat` | `true` | Also print a chat line when the alert fires. |
+| `alertSoundFile` | `""` | Full path to your own alert sound. Used when `alertSound` is `custom`. |
+| `alertVolume` | `100` | Volume of your own file, 0 to 100 (the built-in sounds follow the game volume). |
 | `warningStepsSeconds` | `[120, 180, 300]` | Idle seconds at which each warning level starts. The first entry is also the idle threshold for the analysis. |
 | `afkServerAfterSeconds` | `15` | Idle seconds before the AFK server turns the pill blue. |
 | `screenGraceSeconds` | `60` | How long an open menu or chat counts as activity. |
@@ -60,9 +66,22 @@ No network access, no tokens, no usernames, no account data. Use **Reset stats**
 2. The pill is hidden while you are active. To check it works, set `hudShowWhenActive` to `true`, or set `warningStepsSeconds` to `[10, 20, 30]` and stand still for 10 seconds.
 3. The analysis screen footer shows whether it is tracking, the current gamemode, and the idle time.
 
+## Using your own alert sound
+
+In **Settings**, press **File...** next to the Sound button and pick a file. It plays straight away as a preview and becomes the alert sound. The **File volume** button cycles 25, 50, 75 and 100%.
+
+- The file must be an **uncompressed WAV** (AIFF and AU also work), up to 30 seconds and 10 MB. MP3 and OGG are not supported; convert them first (for example, open it in Audacity and export as WAV).
+- It plays through Java's own audio, not the game's, so the game's sound sliders do not affect it. Use the File volume button.
+- The path is remembered, not the file itself: if you move or delete the file, the alert falls back to the XP orb sound.
+- If the file dialog does not open on your setup, type the path into `alertSoundFile` in `aegis_afk.json` and set `alertSound` to `custom`.
+
 ## Gamemodes versus addresses
 
 The Servers screen works on **gamemode names** (the part of "Sending you to X now..."). Which *server address* counts as BendersMC is still `serverHostFragments` in `aegis_afk.json`.
+
+## Before relying on auto-join
+
+It puts you in the AFK queue unattended. Check that your server's rules allow that, and if AFK time counts toward your quotas, that unattended AFK time is allowed to count.
 
 ## Limits
 
@@ -77,11 +96,13 @@ Push to GitHub. The workflow builds with JDK 25 and uploads the jar as an artifa
 
 Run on every Minecraft or Fabric bump and record the result in the changelog:
 
-1. It compiles. Game-facing code is limited to `mc/InputProbe` (state reads), `mc/ConnectionHooks` (events), `mc/ClientSetup` (keybind, tick), `mc/AlertPlayer` (sound and chat for alerts), `ui/Pill` (every pill draw call), and the screens in `ui/`.
+1. It compiles. Game-facing code is limited to `mc/InputProbe` (state reads), `mc/ConnectionHooks` (events), `mc/ClientSetup` (keybind, tick), `mc/AlertPlayer` (sound and chat for alerts), `audio/CustomSound` (your own sound file), `mc/ClientSetup` (the auto-join command), `ui/Pill` (every pill draw call), and the screens in `ui/`.
 2. Join BendersMC: pill hidden while active, orange at 2:00, red by 3:00, blue in the AFK server.
 3. Hop gamemodes: the pill keeps the right state, and the analysis table gains a row per gamemode.
 4. **Numpad 9** opens the analysis; Escape closes it. Move pill: click the pill, move, click to drop, Done, restart the game, position is kept. The arrow buttons also move it.
 4a. Settings: turn the alert on, set it to 15 seconds, **Test alert** plays the sound and prints the chat line, then stand idle in a non-AFK gamemode and it fires once (and repeats if set). It stays silent in the AFK gamemode.
+4a2. Auto-join: set it to 1:00 in Settings, stand idle in a non-AFK gamemode, and after a minute the chat shows `Sent /joinq AFK.` once. It does not fire in the AFK gamemode or in an excluded gamemode.
+4a3. Custom sound: Settings > File..., pick a short WAV; it should play at once. Rename the file, press Test alert: it falls back to the XP orb.
 4b. Servers: add a gamemode as Exclude; while in it, the pill, alert and statistics all stay quiet. Add one as Include; every other gamemode goes quiet.
 5. Sit in the AFK server for a few minutes: none of that time appears in any tab.
 6. Stand idle past the threshold outside the AFK server: the idle figure jumps by the full idle stretch, not just the part after the threshold.

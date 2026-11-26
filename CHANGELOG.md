@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2]
+- **Custom alert sound**: pick your own WAV (up to 30 s, 10 MB) in Settings with the File... button, with a File volume setting. Falls back to the XP orb sound if the file goes missing. Plays through Java's audio rather than the game's, so the new `audio/CustomSound` has no game API in it.
+- Compile-risk note: the `FileDialog` thread and `minecraft.execute(...)` in `ui/SettingsScreen` are the new calls most likely to need a one-line fix.
+
+## [0.3.1]
+- **Auto-join AFK**: after 5 idle minutes (adjustable) in a tracked, non-AFK gamemode, sends `/joinq AFK` once and says so in chat. Toggle and delay in Settings. Compile-risk note: `mc.player.connection.sendCommand(...)` in `mc/ClientSetup` is the new game call most likely to need a one-line fix.
+
 ## [0.3.0]
 - **Idle alert** (off by default): set the delay, repeat, sound and chat line in Settings, with a Test button. Only fires in a tracked, non-AFK gamemode.
 - **Servers screen**: add gamemodes as Include, Exclude or AFK. Excluded gamemodes are ignored by the pill, alert and statistics; if any are included, only those are tracked.

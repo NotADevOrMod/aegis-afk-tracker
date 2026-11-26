@@ -4,6 +4,8 @@ import com.mojang.blaze3d.platform.InputConstants;
 import io.aegis.afkwatch.AfkWatchClient;
 import io.aegis.afkwatch.Context;
 import io.aegis.afkwatch.core.AlertPolicy;
+import io.aegis.afkwatch.core.AutoJoinPolicy;
+import io.aegis.afkwatch.core.Format;
 import io.aegis.afkwatch.core.Mode;
 import io.aegis.afkwatch.core.View;
 import io.aegis.afkwatch.ui.AnalysisScreen;
@@ -70,6 +72,7 @@ public final class ClientSetup {
         try {
             InputProbe probe = new InputProbe(ctx.settings());
             AlertPolicy alerts = new AlertPolicy(ctx.settings());
+            AutoJoinPolicy autoJoin = new AutoJoinPolicy(ctx.settings());
             long[] lastSave = {System.currentTimeMillis()};
             long[] noticedConnection = {ctx.session().joinCount()};
             int[] tickErrors = {0};
@@ -102,6 +105,14 @@ public final class ClientSetup {
                     if (alerts.shouldFire(idle, alertable)) {
                         AlertPlayer.fire(mc, ctx.settings(), idle);
                         diag.log("Idle alert fired (idle " + idle + "s).");
+                    }
+
+                    if (autoJoin.shouldFire(idle, alertable) && mc.player != null) {
+                        String command = ctx.settings().autoAfkCommand;
+                        mc.player.connection.sendCommand(command);
+                        mc.player.sendSystemMessage(Component.literal(
+                                "[AFK Watch] Idle for " + Format.clock(idle) + ": sent /" + command + "."));
+                        diag.log("Auto-join sent /" + command + " (idle " + idle + "s).");
                     }
 
                     if (ctx.settings().joinNotice && mc.player != null

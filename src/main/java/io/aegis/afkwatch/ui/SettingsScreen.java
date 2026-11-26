@@ -1,6 +1,7 @@
 package io.aegis.afkwatch.ui;
 
 import io.aegis.afkwatch.Context;
+import io.aegis.afkwatch.audio.CustomSound;
 import io.aegis.afkwatch.core.Format;
 import io.aegis.afkwatch.core.Settings;
 import io.aegis.afkwatch.mc.AlertPlayer;
@@ -8,6 +9,11 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+
+import java.awt.FileDialog;
+import java.awt.Frame;
+import java.awt.GraphicsEnvironment;
+import java.nio.file.Path;
 
 /** The idle alert, plus doors to the server lists, the pill position and resetting statistics. */
 public final class SettingsScreen extends Screen {
@@ -24,6 +30,10 @@ public final class SettingsScreen extends Screen {
     private Button repeatButton;
     private Button soundButton;
     private Button chatButton;
+    private Button autoButton;
+    private Button volumeButton;
+    private String status = "";
+    private int statusColor = 0xFF8C96A5;
     private Button resetButton;
     private boolean resetArmed;
 
@@ -42,7 +52,7 @@ public final class SettingsScreen extends Screen {
     }
 
     private int top() {
-        return Math.max(8, (this.height - 222) / 2);
+        return Math.max(8, (this.height - 246) / 2);
     }
 
     @Override
@@ -82,11 +92,12 @@ public final class SettingsScreen extends Screen {
         });
         y += ROW;
 
-        soundButton = add("", left, y, WIDTH, b -> {
-            s().alertSound = AlertPlayer.nextSound(s().alertSound);
-            AlertPlayer.playSound(this.minecraft, s().alertSound);
+        soundButton = add("", left, y, WIDTH - 64, b -> {
+            s().alertSound = AlertPlayer.nextSound(s().alertSound, !s().alertSoundFile.isEmpty());
+            AlertPlayer.playSound(this.minecraft, s());
             changed();
         });
+        add("File...", left + WIDTH - 60, y, 60, b -> chooseFile());
         y += ROW;
 
         chatButton = add("", left, y, WIDTH, b -> {
@@ -95,7 +106,25 @@ public final class SettingsScreen extends Screen {
         });
         y += ROW;
 
-        add("Test alert", left, y, WIDTH, b -> AlertPlayer.fire(this.minecraft, s(), s().alertAfterSeconds));
+        add("Test alert", left, y, half, b -> AlertPlayer.fire(this.minecraft, s(), s().alertAfterSeconds));
+        volumeButton = add("", left + half + 4, y, half, b -> {
+            s().alertVolume = s().alertVolume <= 25 ? 50 : s().alertVolume <= 50 ? 75 : s().alertVolume <= 75 ? 100 : 25;
+            changed();
+        });
+        y += ROW;
+
+        add("-", left, y, 22, b -> {
+            s().autoAfkAfterSeconds = Math.max(60, s().autoAfkAfterSeconds - 60);
+            changed();
+        });
+        autoButton = add("", left + 24, y, WIDTH - 48, b -> {
+            s().autoAfkEnabled = !s().autoAfkEnabled;
+            changed();
+        });
+        add("+", left + WIDTH - 22, y, 22, b -> {
+            s().autoAfkAfterSeconds = Math.min(3600, s().autoAfkAfterSeconds + 60);
+            changed();
+        });
         y += ROW + 4;
 
         add("Servers...", left, y, half, b -> this.minecraft.gui.setScreen(new ServersScreen(ctx, this)));
@@ -125,8 +154,50 @@ public final class SettingsScreen extends Screen {
         afterLabel.setMessage(Component.literal("Alert after: " + Format.clock(s.alertAfterSeconds) + " idle"));
         repeatButton.setMessage(Component.literal(s.alertRepeatSeconds == 0
                 ? "Repeat: once" : "Repeat: every " + Format.clock(s.alertRepeatSeconds)));
-        soundButton.setMessage(Component.literal("Sound: " + AlertPlayer.soundLabel(s.alertSound)));
+        soundButton.setMessage(Component.literal("Sound: " + AlertPlayer.soundLabel(s)));
+        volumeButton.setMessage(Component.literal("File volume: " + s.alertVolume + "%"));
+        autoButton.setMessage(Component.literal("Auto-join AFK after " + Format.clock(s.autoAfkAfterSeconds)
+                + ": " + (s.autoAfkEnabled ? "ON" : "OFF")));
         chatButton.setMessage(Component.literal("Chat message: " + (s.alertChat ? "ON" : "OFF")));
+    }
+
+    /** Opens the system file picker on its own thread, so the game keeps running while it is open. */
+    private void chooseFile() {
+        if (GraphicsEnvironment.isHeadless()) {
+            setStatus("No file dialog here: set alertSoundFile in aegis_afk.json", false);
+            return;
+        }
+        Thread thread = new Thread(() -> {
+            FileDialog dialog = new FileDialog((Frame) null, "Choose an alert sound (WAV)", FileDialog.LOAD);
+            dialog.setFile("*.wav");
+            dialog.setVisible(true); // blocks this thread only
+            String name = dialog.getFile();
+            String folder = dialog.getDirectory();
+            if (name != null && folder != null) {
+                Path chosen = Path.of(folder, name);
+                this.minecraft.execute(() -> useFile(chosen));
+            }
+        }, "aegis-afk-file-dialog");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void useFile(Path chosen) {
+        String problem = CustomSound.validate(chosen.toString());
+        if (problem != null) {
+            setStatus(problem, false);
+            return;
+        }
+        s().alertSoundFile = chosen.toString();
+        s().alertSound = "custom";
+        changed();
+        AlertPlayer.playSound(this.minecraft, s());
+        setStatus("Using " + chosen.getFileName(), true);
+    }
+
+    private void setStatus(String message, boolean good) {
+        status = message;
+        statusColor = good ? 0xFF6BCB8B : 0xFFE8833A;
     }
 
     private void onResetPressed() {
@@ -151,6 +222,9 @@ public final class SettingsScreen extends Screen {
         String title = "AFK SETTINGS";
         graphics.text(this.font, title, (this.width - this.font.width(title)) / 2, top + 4, 0xFFFFFFFF, true);
         graphics.fill(left, top + 16, left + WIDTH, top + 17, 0xFF5AA9E6);
+        if (!status.isEmpty()) {
+            graphics.text(this.font, status, (this.width - this.font.width(status)) / 2, top + 18, statusColor, false);
+        }
     }
 
     @Override

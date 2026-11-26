@@ -40,9 +40,19 @@ public final class Settings {
     public int alertAfterSeconds = 60;
     /** Seconds between repeats while still idle; 0 means alert once. */
     public int alertRepeatSeconds = 60;
-    /** One of: xp, pling, bell, none. */
+    /** One of: xp, pling, bell, custom, none. */
     public String alertSound = "xp";
+    /** Full path to your own alert sound (uncompressed WAV, up to 30 seconds), used when alertSound is "custom". */
+    public String alertSoundFile = "";
+    /** Volume of the custom sound, 0 to 100. The built-in sounds follow the game volume. */
+    public int alertVolume = 100;
     public boolean alertChat = true;
+
+    /** Join the AFK queue by itself after being idle this long in a tracked, non-AFK gamemode. */
+    public boolean autoAfkEnabled = true;
+    public int autoAfkAfterSeconds = 300;
+    /** The command to send, without the leading slash. */
+    public String autoAfkCommand = "joinq AFK";
 
     /** Print one chat line on joining a server saying whether it is being tracked. */
     public boolean joinNotice = true;
@@ -187,7 +197,17 @@ public final class Settings {
         excludedServers = cleanNames(excludedServers);
         alertAfterSeconds = Math.max(10, Math.min(900, alertAfterSeconds));
         alertRepeatSeconds = Math.max(0, Math.min(900, alertRepeatSeconds));
-        if (alertSound == null || !List.of("xp", "pling", "bell", "none").contains(alertSound)) {
+        autoAfkAfterSeconds = Math.max(60, Math.min(3600, autoAfkAfterSeconds));
+        autoAfkCommand = autoAfkCommand == null ? "" : autoAfkCommand.replaceAll("[\\r\\n]", " ").trim();
+        while (autoAfkCommand.startsWith("/")) {
+            autoAfkCommand = autoAfkCommand.substring(1).trim();
+        }
+        if (autoAfkCommand.isEmpty() || autoAfkCommand.length() > 100) {
+            autoAfkCommand = "joinq AFK";
+        }
+        alertSoundFile = alertSoundFile == null ? "" : alertSoundFile.trim();
+        alertVolume = Math.max(0, Math.min(100, alertVolume));
+        if (alertSound == null || !List.of("xp", "pling", "bell", "custom", "none").contains(alertSound)) {
             alertSound = "xp";
         }
         if (serverHostFragments == null) serverHostFragments = new ArrayList<>(List.of("benders"));
