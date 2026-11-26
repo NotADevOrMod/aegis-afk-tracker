@@ -15,6 +15,7 @@ public final class Pill {
 
     private static final int PAD_X = 8;
     private static final int PANEL = 0xCC101418;
+    private static final int PANEL_SOLID = 0xFF101418;
     private static final int TEXT = 0xFFFFFFFF;
     private static final int SUBTEXT = 0xFFB8C0CC;
 
@@ -34,11 +35,20 @@ public final class Pill {
     }
 
     public static void draw(GuiGraphicsExtractor graphics, Font font, View view, int x, int y, long nowMs) {
+        draw(graphics, font, view, x, y, nowMs, PANEL);
+    }
+
+    /** Fully opaque, for the position editor where it is drawn over a button. */
+    public static void drawSolid(GuiGraphicsExtractor graphics, Font font, View view, int x, int y, long nowMs) {
+        draw(graphics, font, view, x, y, nowMs, PANEL_SOLID);
+    }
+
+    private static void draw(GuiGraphicsExtractor graphics, Font font, View view, int x, int y, long nowMs, int panel) {
         int w = width(font, view);
         int accent = Palette.withAlpha(Palette.accent(view), Palette.pulse(view, nowMs));
 
         graphics.fill(x - 1, y - 1, x + w + 1, y + HEIGHT + 1, accent);
-        graphics.fill(x, y, x + w, y + HEIGHT, PANEL);
+        graphics.fill(x, y, x + w, y + HEIGHT, panel);
         graphics.fill(x, y, x + 3, y + HEIGHT, accent);
         graphics.text(font, view.headline(), x + PAD_X + 2, y + 4, TEXT, true);
         graphics.text(font, view.detail(), x + PAD_X + 2, y + 14, SUBTEXT, false);

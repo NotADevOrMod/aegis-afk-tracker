@@ -34,8 +34,6 @@ public final class AnalysisScreen extends Screen {
     private final Context ctx;
     private final Screen parent;
     private final Button[] tabButtons = new Button[TABS.length];
-    private Button resetButton;
-    private boolean resetArmed;
     private int range = 1; // opens on "Today"
 
     public AnalysisScreen(Context ctx, Screen parent) {
@@ -77,29 +75,16 @@ public final class AnalysisScreen extends Screen {
 
         int bw = (inner - gap * 2) / 3;
         int by = top + panelHeight() - 28;
-        this.addRenderableWidget(Button.builder(Component.literal("Move pill"),
-                        b -> this.minecraft.gui.setScreen(new PositionScreen(ctx.settings(), this)))
+        this.addRenderableWidget(Button.builder(Component.literal("Settings"),
+                        b -> this.minecraft.gui.setScreen(new SettingsScreen(ctx, this)))
                 .bounds(left + 12, by, bw, 20).build());
 
-        resetButton = Button.builder(Component.literal("Reset stats"), b -> onResetPressed())
-                .bounds(left + 12 + bw + gap, by, bw, 20).build();
-        this.addRenderableWidget(resetButton);
+        this.addRenderableWidget(Button.builder(Component.literal("Move pill"),
+                        b -> this.minecraft.gui.setScreen(new PositionScreen(ctx.settings(), this)))
+                .bounds(left + 12 + bw + gap, by, bw, 20).build());
 
         this.addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose())
                 .bounds(left + 12 + (bw + gap) * 2, by, bw, 20).build());
-    }
-
-    private void onResetPressed() {
-        if (!resetArmed) {
-            resetArmed = true;
-            resetButton.setMessage(Component.literal("Click to confirm"));
-            return;
-        }
-        ctx.lifetime().clear();
-        ctx.thisSession().clear();
-        ctx.store().saveAsync(ctx.lifetime());
-        resetArmed = false;
-        resetButton.setMessage(Component.literal("Reset stats"));
     }
 
     private Stats.Totals totals() {

@@ -113,6 +113,9 @@ public final class Session {
             boolean fresh = dropped && now - droppedAt <= settings.disconnectLingerSeconds * 1000L;
             return fresh ? new View(Mode.DISCONNECTED, 0, idleAtDrop, server) : View.INACTIVE;
         }
+        if (!afkServer && settings.isIgnoredServer(server)) {
+            return View.INACTIVE; // excluded gamemode: nothing to show, count or alert
+        }
         long idle = Math.max(0, (now - lastActivity) / 1000);
         if (afkServer) {
             return idle >= settings.afkServerAfterSeconds

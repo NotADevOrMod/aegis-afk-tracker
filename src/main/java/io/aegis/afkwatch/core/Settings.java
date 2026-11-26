@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -18,6 +19,11 @@ public final class Settings {
     public List<String> serverHostFragments = new ArrayList<>(List.of("benders"));
     /** Server names (from the "Sending you to ..." line) that count as the AFK server. */
     public List<String> afkServerNames = new ArrayList<>(List.of("afk"));
+    /** Gamemodes to track exclusively. Empty means "track everything that is not excluded". */
+    public List<String> includedServers = new ArrayList<>();
+    /** Gamemodes to ignore completely: no pill, no alerts, no statistics. */
+    public List<String> excludedServers = new ArrayList<>();
+
     /** Idle seconds at which each warning level begins. The first entry is when warnings start. */
     public List<Integer> warningStepsSeconds = new ArrayList<>(List.of(120, 180, 300));
     /** Idle seconds before the AFK server turns the indicator blue. */
@@ -28,6 +34,15 @@ public final class Settings {
     public int unfocusedGraceSeconds = 15;
     /** How long the "Disconnected" state stays up after a drop. */
     public int disconnectLingerSeconds = 600;
+
+    /** The idle alert: fires when idle this long in a tracked, non-AFK gamemode. */
+    public boolean alertEnabled = false;
+    public int alertAfterSeconds = 60;
+    /** Seconds between repeats while still idle; 0 means alert once. */
+    public int alertRepeatSeconds = 60;
+    /** One of: xp, pling, bell, none. */
+    public String alertSound = "xp";
+    public boolean alertChat = true;
 
     /** Print one chat line on joining a server saying whether it is being tracked. */
     public boolean joinNotice = true;
@@ -83,6 +98,75 @@ public final class Settings {
         return loadProblem;
     }
 
+    /** A gamemode and the role the player gave it. */
+    public record ServerEntry(String name, ServerRole role) {}
+
+    /** Every listed gamemode with its role, sorted by name. A name in several lists takes the strongest role. */
+    public List<ServerEntry> serverEntries() {
+        java.util.Map<String, ServerEntry> byName = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        for (ServerRole role : new ServerRole[] {ServerRole.INCLUDE, ServerRole.EXCLUDE, ServerRole.AFK}) {
+            for (String name : listFor(role)) {
+                byName.put(name, new ServerEntry(name, role)); // later roles (AFK) override earlier ones
+            }
+        }
+        return new ArrayList<>(byName.values());
+    }
+
+    /** Gives a gamemode exactly one role, replacing any it had. */
+    public void setServerRole(String name, ServerRole role) {
+        String clean = name == null ? "" : name.trim();
+        if (clean.isEmpty()) {
+            return;
+        }
+        removeServer(clean);
+        listFor(role).add(clean);
+    }
+
+    public void removeServer(String name) {
+        String clean = name == null ? "" : name.trim();
+        for (ServerRole role : ServerRole.values()) {
+            listFor(role).removeIf(n -> n.equalsIgnoreCase(clean));
+        }
+    }
+
+    private List<String> listFor(ServerRole role) {
+        return switch (role) {
+            case INCLUDE -> includedServers;
+            case EXCLUDE -> excludedServers;
+            case AFK -> afkServerNames;
+        };
+    }
+
+    /**
+     * True when this gamemode should be left alone entirely. An unknown gamemode is never ignored, and
+     * the AFK gamemode has its own handling.
+     */
+    public boolean isIgnoredServer(String name) {
+        if (name == null || name.isBlank() || isAfkServer(name)) {
+            return false;
+        }
+        if (containsName(excludedServers, name)) {
+            return true;
+        }
+        return !includedServers.isEmpty() && !containsName(includedServers, name);
+    }
+
+    private static boolean containsName(List<String> list, String name) {
+        return list.stream().anyMatch(n -> n.equalsIgnoreCase(name.trim()));
+    }
+
+    private static List<String> cleanNames(List<String> in) {
+        List<String> out = new CopyOnWriteArrayList<>();
+        if (in != null) {
+            for (String n : in) {
+                if (n != null && !n.isBlank() && !containsName(out, n)) {
+                    out.add(n.trim());
+                }
+            }
+        }
+        return out;
+    }
+
     public int warnStartSeconds() {
         return warningStepsSeconds.get(0);
     }
@@ -97,6 +181,15 @@ public final class Settings {
     }
 
     private void normalize() {
+        afkServerNames = afkServerNames == null ? new ArrayList<>(List.of("afk")) : afkServerNames;
+        afkServerNames = cleanNames(afkServerNames);
+        includedServers = cleanNames(includedServers);
+        excludedServers = cleanNames(excludedServers);
+        alertAfterSeconds = Math.max(10, Math.min(900, alertAfterSeconds));
+        alertRepeatSeconds = Math.max(0, Math.min(900, alertRepeatSeconds));
+        if (alertSound == null || !List.of("xp", "pling", "bell", "none").contains(alertSound)) {
+            alertSound = "xp";
+        }
         if (serverHostFragments == null) serverHostFragments = new ArrayList<>(List.of("benders"));
         if (afkServerNames == null) afkServerNames = new ArrayList<>(List.of("afk"));
         if (warningStepsSeconds == null) warningStepsSeconds = new ArrayList<>();

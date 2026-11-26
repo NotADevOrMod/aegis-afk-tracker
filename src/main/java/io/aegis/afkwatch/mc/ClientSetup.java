@@ -3,6 +3,8 @@ package io.aegis.afkwatch.mc;
 import com.mojang.blaze3d.platform.InputConstants;
 import io.aegis.afkwatch.AfkWatchClient;
 import io.aegis.afkwatch.Context;
+import io.aegis.afkwatch.core.AlertPolicy;
+import io.aegis.afkwatch.core.Mode;
 import io.aegis.afkwatch.core.View;
 import io.aegis.afkwatch.ui.AnalysisScreen;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -67,6 +69,7 @@ public final class ClientSetup {
 
         try {
             InputProbe probe = new InputProbe(ctx.settings());
+            AlertPolicy alerts = new AlertPolicy(ctx.settings());
             long[] lastSave = {System.currentTimeMillis()};
             long[] noticedConnection = {ctx.session().joinCount()};
             int[] tickErrors = {0};
@@ -91,6 +94,14 @@ public final class ClientSetup {
                     if (!mode.equals(lastMode[0])) {
                         lastMode[0] = mode;
                         diag.log("Indicator mode -> " + mode + " (idle " + ctx.session().idleSeconds(now) + "s)");
+                    }
+
+                    boolean alertable = (view.mode() == Mode.ACTIVE || view.mode() == Mode.WARNING)
+                            && !ctx.session().inAfkServer();
+                    long idle = ctx.session().idleSeconds(now);
+                    if (alerts.shouldFire(idle, alertable)) {
+                        AlertPlayer.fire(mc, ctx.settings(), idle);
+                        diag.log("Idle alert fired (idle " + idle + "s).");
                     }
 
                     if (ctx.settings().joinNotice && mc.player != null

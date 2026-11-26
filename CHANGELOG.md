@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0]
+- **Idle alert** (off by default): set the delay, repeat, sound and chat line in Settings, with a Test button. Only fires in a tracked, non-AFK gamemode.
+- **Servers screen**: add gamemodes as Include, Exclude or AFK. Excluded gamemodes are ignored by the pill, alert and statistics; if any are included, only those are tracked.
+- **Pill placement reworked**: click to pick up, click to drop, plus arrow nudges. The old press-and-drag relied on a mouse-state call that did not work in screens.
+- Reset stats moved into Settings. The analysis screen now has Settings, Move pill and Done.
+- Compile-risk notes: `SimpleSoundInstance.forUI(...)` in `mc/AlertPlayer` and the `EditBox` calls in `ui/ServersScreen` are the new game calls most likely to need a one-line fix.
+
 ## [0.2.5]
 - Renamed `mc/GameBridge` to `mc/ClientSetup`. Everything lives in the mod; nothing bridges to anything else. No behaviour change.
 - Upgrade note: delete the old `src/main/java/io/aegis/afkwatch/mc/GameBridge.java` from your repo.
